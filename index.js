@@ -22,7 +22,7 @@ const VerifyToken = async (req, res, next) => {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
     const MainToken = token.split(' ')[1];
-    if (!token) {
+    if (!MainToken) {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
     try {
@@ -52,6 +52,7 @@ async function run() {
     try {
         const database = client.db("sportshub");
         const sportsFacilities = database.collection("sports_facilities");
+        const bookings = database.collection("bookings");
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
@@ -60,17 +61,24 @@ async function run() {
             res.send(data);
         })
         app.get('/facility/:id', VerifyToken, async (req, res) => {
-            const token = req.headers.authorization;
-
             const data = await sportsFacilities.findOne({ _id: new ObjectId(req.params.id) });
             res.send(data);
         });
-        app.post('/addfacilities', VerifyToken, async (req, res) => {   
+        app.post('/facility', VerifyToken, async (req, res) => {
+            const data = req.body;
+            const result = await bookings.insertOne(data);
+            res.send(result);
+        });
+        app.post('/addfacilities', async (req, res) => {
             const data = req.body;
             const result = await sportsFacilities.insertOne(data);
             res.send(result);
-            console.log(result, data);
+        });
 
+        app.get('/mybookings/:user_id', async (req, res) => {
+            const id = req.params.user_id;
+            const data = await bookings.find({ user_id: id }).toArray();
+            res.send(data);
         });
 
 
