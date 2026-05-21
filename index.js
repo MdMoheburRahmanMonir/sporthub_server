@@ -3,7 +3,10 @@ const cors = require('cors');
 require('dotenv').config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 
@@ -28,6 +31,7 @@ const VerifyToken = async (req, res, next) => {
     try {
         const { payload } = await jwtVerify(MainToken, JWKS)
         console.log(payload);
+        req.user = payload;
         next();
 
     } catch (error) {
@@ -81,7 +85,17 @@ async function run() {
             res.send(data);
         });
 
+        app.delete('/mybookings/:id',VerifyToken, async (req, res) => {
+            const facilityId = req.params.id;
+            const userId = req.user.id;
 
+            const result = await bookings.deleteMany({
+                user_id: userId,
+                facility_id: facilityId
+            });
+
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
