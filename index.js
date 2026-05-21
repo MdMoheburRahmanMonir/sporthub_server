@@ -16,12 +16,19 @@ const JWKS = createRemoteJWKSet(
     new URL(`${process.env.URL}/api/auth/jwks`)
 )
 
+
+
+
 const VerifyToken = async (req, res, next) => {
     const token = req.headers.authorization;
+    console.log(token);
+    
     if (!token) {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
     const MainToken = token.split(' ')[1];
+    console.log(MainToken);
+    
     if (!MainToken) {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
@@ -33,10 +40,7 @@ const VerifyToken = async (req, res, next) => {
 
     } catch (error) {
         return res.status(401).json({ message: 'Unauthorized access' });
-    }
-
-
-
+    }  
 }
 
 
@@ -61,23 +65,22 @@ async function run() {
             const data = await sportsFacilities.find({}).toArray();
             res.send(data);
         })
-        app.get('/facilities/:id', VerifyToken, async (req, res) => {
+        app.get('/facilities/:id',   async (req, res) => {
             const data = await sportsFacilities.findOne({ _id: new ObjectId(req.params.id) });
             res.send(data);
         });
-        app.post('/facility', VerifyToken, async (req, res) => {
+        app.post('/facilities',   async (req, res) => {
             const data = req.body;
             const result = await bookings.insertOne(data);
             res.send(result);
         });
 
-        app.post('/addfacilities', VerifyToken, async (req, res) => {
+        app.post('/addfacilities',   async (req, res) => {
             try {
                 const data = req.body;
                 const result = await sportsFacilities.insertOne({
                     ...data,
-                    createdAt: new Date(),
-                    user_id: req.user.id
+                    createdAt: new Date() 
                 });
 
                 res.json(result);
@@ -95,19 +98,18 @@ async function run() {
             res.send(data);
         });
 
-        app.delete('/mybookings/:id', VerifyToken, async (req, res) => {
-            const facilityId = req.params.id;
-            const userId = req.user.id;
+        app.delete('/mybookings/:id',   async (req, res) => {
+            const facilityId = req.params.id; 
 
             const result = await bookings.deleteMany({
-                user_id: userId,
-                facility_id: facilityId
+                
+                facility_id: facilityId,
             });
 
             res.send(result);
         })
 
-        app.patch('/mybookings/:id', VerifyToken, async (req, res) => {
+        app.patch('/mybookings/:id',   async (req, res) => {
             const facilityId = req.params.id;
             const userId = req.user.id;
             const updatedData = req.body;
@@ -131,12 +133,12 @@ async function run() {
         });
 
 
-        app.patch('/managemyfacilities/:id', VerifyToken, async (req, res) => {
+        app.patch('/managemyfacilities/:id',   async (req, res) => {
             const facilityId = req.params.id;
             const result = await sportsFacilities.updateOne(
                 {
                     _id: new ObjectId(facilityId),
-                    user_id: req.user.id
+                    // user_id: req.user.id
                 },
                 {
                     $set: req.body
@@ -146,12 +148,12 @@ async function run() {
         });
 
 
-        app.delete('/managemyfacilities/:id', VerifyToken, async (req, res) => {
+        app.delete('/managemyfacilities/:id',   async (req, res) => {
             try {
                 const facilityId = req.params.id;
                 const result = await sportsFacilities.deleteOne({
                     _id: new ObjectId(facilityId),
-                    user_id: req.user.id
+                    // user_id: req.user.id
                 });
                 if (result.deletedCount === 0) {
                     return res.status(404).send({
