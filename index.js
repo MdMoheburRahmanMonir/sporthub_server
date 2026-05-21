@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 
 const JWKS = createRemoteJWKSet(
-    new URL('http://localhost:3000/api/auth/jwks')
+    new URL(`${process.env.URL}/api/auth/jwks`)
 )
 
 const VerifyToken = async (req, res, next) => {
